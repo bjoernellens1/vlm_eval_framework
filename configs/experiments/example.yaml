@@ -1,0 +1,38 @@
+# Example Experiment Configuration
+# This demonstrates a complete experiment setup for evaluating
+# a RADIO encoder with a linear probe head on Pascal VOC
+
+name: "radio_base_pascal_voc"
+
+# Encoder configuration
+encoder:
+  name: "radio"
+  variant: "base"
+  pretrained: true
+
+# Head configuration
+head:
+  name: "linear_probe"
+  num_classes: 21
+  freeze_encoder: true
+
+# Dataset configuration
+dataset:
+  name: "pascal_voc"
+  split: "val"
+  root: "/path/to/pascal_voc"
+
+# Metrics to compute
+metrics:
+  compute_miou: true
+  compute_boundary_f1: false
+  compute_panoptic_quality: false
+  boundary_threshold: 2
+
+# Inference settings
+inference:
+  batch_size: 16
+  device: "cuda"
+  precision: "fp32"
+  num_workers: 4
+  pin_memory: true

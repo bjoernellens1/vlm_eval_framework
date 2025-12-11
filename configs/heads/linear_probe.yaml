@@ -1,0 +1,13 @@
+# Example Head Configuration
+# This is a template for configuring a linear probe head
+
+name: "linear_probe"
+num_classes: 21
+freeze_encoder: true
+
+# Additional head-specific parameters
+kwargs:
+  # Add any head-specific parameters here
+  # For example:
+  # dropout: 0.1
+  # use_batch_norm: true

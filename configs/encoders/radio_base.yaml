@@ -1,0 +1,13 @@
+# Example Encoder Configuration
+# This is a template for configuring a RADIO encoder
+
+name: "radio"
+variant: "base"
+pretrained: true
+
+# Additional encoder-specific parameters
+kwargs:
+  # Add any encoder-specific parameters here
+  # For example:
+  # dropout: 0.1
+  # attention_dropout: 0.1
