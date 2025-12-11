@@ -26,6 +26,21 @@ pip install -e ".[dev]"
 - PyTorch >= 2.0.0
 - See `requirements.txt` for full dependencies
 
+### ROS Environment Setup (Optional)
+
+To use the TUM dataset loader with rosbags, you need to install ROS dependencies.
+You can add them to your current Conda environment using the provided environment file:
+
+```bash
+conda env update --prefix $CONDA_PREFIX --file environment_ros.yaml
+```
+
+Or create a new environment:
+
+```bash
+conda env create -f environment_ros.yaml
+```
+
 ## Quick Start
 
 ### Ready-to-Run Example
