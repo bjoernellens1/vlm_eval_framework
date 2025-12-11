@@ -10,7 +10,12 @@ import numpy as np
 import torch
 from torchvision.ops.boxes import batched_nms, box_area
 
-from segment_anything.utils.amg import MaskData, batched_mask_to_box, box_xyxy_to_xywh
+try:
+    from segment_anything.utils.amg import MaskData, batched_mask_to_box, box_xyxy_to_xywh
+except ImportError:
+    MaskData = None
+    batched_mask_to_box = None
+    box_xyxy_to_xywh = None
 
 
 @dataclass
@@ -33,6 +38,125 @@ class Segmenter(abc.ABC):
 
     def to(self, device: str) -> None:
         pass
+
+
+class TransformersSAMSegmenter(Segmenter):
+    def __init__(self, config: dict[str, Any]):
+        from transformers import pipeline, SamModel, SamProcessor
+        self.device = config.get("device", "cpu")
+        model_name = "facebook/sam-vit-base"
+        if config.get("model_type") == "vit_h":
+             model_name = "facebook/sam-vit-huge"
+        elif config.get("model_type") == "vit_l":
+             model_name = "facebook/sam-vit-large"
+        
+        self.generator = pipeline("mask-generation", model=model_name, device=self.device)
+        self.processor = SamProcessor.from_pretrained(model_name)
+        self.model = self.generator.model
+
+    def to(self, device: str) -> None:
+        self.model.to(device)
+        self.device = device
+
+    def segment(self, image: npt.ArrayLike) -> list[Segment]:
+        # image: numpy array (H, W, 3)
+        from PIL import Image
+        if isinstance(image, np.ndarray):
+            image_pil = Image.fromarray(image)
+        else:
+            image_pil = image
+            
+        outputs = self.generator(image_pil)
+        # outputs is list of dicts: {'mask': array, 'box': [x_min, y_min, x_max, y_max], 'score': float}
+        
+        segments = []
+        for out in outputs:
+            mask = out['mask']
+            box_xyxy = out['box']
+            x, y, x2, y2 = box_xyxy
+            w = x2 - x
+            h = y2 - y
+            segments.append(Segment(mask, [x, y, w, h]))
+        return segments
+
+    def refine(self, image: npt.ArrayLike, point_coords: npt.ArrayLike) -> list[Segment]:
+        # point_coords: [N, 2]
+        from PIL import Image
+        if isinstance(image, np.ndarray):
+            image_pil = Image.fromarray(image)
+        else:
+            image_pil = image
+            
+        # Prepare inputs
+        # Transformers SAM expects input_points as list of lists of lists? 
+        # input_points (np.ndarray or List[List[List[float]]], optional) — Input 2D spatial points
+        # shape (batch_size, point_batch_size, num_points_per_mask, 2)
+        
+        # We treat each point as a separate prompt for a separate mask?
+        # The original code does:
+        # coords_torch[:, None, :] -> (N, 1, 2)
+        # So N prompts, each with 1 point.
+        
+        input_points = [[list(p)] for p in point_coords] # List of [x, y] -> List of [[x, y]]
+        # Actually we want batch of points.
+        # processor(images=image, input_points=[[[x, y], [x, y]]]) -> 1 image, 2 points for 1 mask?
+        # No, we want N masks.
+        
+        # We can run batch inference if we duplicate the image? Or does processor support one image multiple point sets?
+        # Processor supports: images (PIL.Image.Image, np.ndarray, List[PIL.Image.Image], List[np.ndarray])
+        # input_points (np.ndarray, List[List[List[float]]])
+        
+        # If we provide 1 image and N point sets, it might not work as expected for batching.
+        # Usually we replicate the image.
+        
+        n_points = len(point_coords)
+        images = [image_pil] * n_points
+        input_points = [[[list(p)]] for p in point_coords] # (N, 1, 1, 2) ?
+        # Processor expects: (batch_size, num_masks_per_image, num_points_per_mask, 2)
+        # If we pass list of images, batch_size = N.
+        # input_points should be list of list of list.
+        # Outer list: batch (N)
+        # Middle list: points per mask (1) - wait, SAM can take multiple points per mask.
+        # Inner list: coordinates (2)
+        
+        # Let's try: input_points = [[[x, y]]] for each image.
+        
+        inputs = self.processor(images=images, input_points=input_points, return_tensors="pt").to(self.device)
+        
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+        
+        masks = self.processor.image_processor.post_process_masks(
+            outputs.pred_masks.cpu(), inputs["original_sizes"].cpu(), inputs["reshaped_input_sizes"].cpu()
+        )
+        # masks: List of tensors. Each tensor (num_masks_per_image, num_generated_masks, H, W)
+        # num_generated_masks is usually 3 (multimask_output=True by default).
+        
+        segments = []
+        for i, mask_tensor in enumerate(masks):
+            # mask_tensor: (1, 3, H, W)
+            # We pick the best one? Or all?
+            # Original code:
+            # masks, iou_predictions, low_res_masks = self.mask_generator.predictor.predict_torch(...)
+            # It returns multiple masks.
+            # Then it filters them.
+            
+            # For simplicity, let's take the one with highest score.
+            iou_scores = outputs.iou_scores[i, 0, :] # (3,)
+            best_idx = torch.argmax(iou_scores).item()
+            
+            best_mask = mask_tensor[0, best_idx, :, :].numpy() # (H, W)
+            
+            # Bbox
+            y_indices, x_indices = np.where(best_mask)
+            if len(y_indices) > 0:
+                x_min, x_max = np.min(x_indices), np.max(x_indices)
+                y_min, y_max = np.min(y_indices), np.max(y_indices)
+                w = x_max - x_min
+                h = y_max - y_min
+                segments.append(Segment(best_mask, [x_min, y_min, w, h]))
+                
+        return segments
 
 
 class SAMSegmenter(Segmenter):

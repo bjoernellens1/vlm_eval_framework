@@ -78,8 +78,10 @@ class ConceptFusionEncoder(BaseEncoder):
         return torch.stack(outputs)
 
     def encode_text(self, text: List[str]) -> torch.Tensor:
-        text_tokens = self.model.clip_tokenizer(text).to(self.model.device)
-        text_features = self.model.clip_model.encode_text(text_tokens)
+        # text_tokens = self.model.clip_tokenizer(text).to(self.model.device)
+        # text_features = self.model.clip_model.encode_text(text_tokens)
+        inputs = self.model.clip_processor(text=text, return_tensors="pt", padding=True).to(self.model.device)
+        text_features = self.model.clip_model.get_text_features(**inputs)
         return torch.nn.functional.normalize(text_features, dim=-1)
 
     def get_config(self) -> Dict[str, Any]:
@@ -129,10 +131,11 @@ class DINOFusionEncoder(BaseEncoder):
         return torch.stack(outputs)
 
     def encode_text(self, text: List[str]) -> torch.Tensor:
-        tokenized_texts_tensor = self.model.dino_tokenizer.tokenize(text).to(self.model.device)
-        # DINOv3 text encoder usage from dino_fusion.py
-        textfeat = self.model.dino_model.encode_text(tokenized_texts_tensor)[:, 1024:]
-        return torch.nn.functional.normalize(textfeat.float(), p=2, dim=1)
+        # tokenized_texts_tensor = self.model.dino_tokenizer.tokenize(text).to(self.model.device)
+        # # DINOv3 text encoder usage from dino_fusion.py
+        # textfeat = self.model.dino_model.encode_text(tokenized_texts_tensor)[:, 1024:]
+        # return torch.nn.functional.normalize(textfeat.float(), p=2, dim=1)
+        raise NotImplementedError("Text encoding is not supported for DINOv3 loaded via transformers (vision only).")
 
     def get_config(self) -> Dict[str, Any]:
         return {"device": self._device_str}
@@ -197,8 +200,10 @@ class XFusionEncoder(BaseEncoder):
         return torch.stack(outputs)
 
     def encode_text(self, text: List[str]) -> torch.Tensor:
-        text_tokens = self.model.clip_tokenizer(text).to(self.model.device)
-        text_features = self.model.clip_model.encode_text(text_tokens)
+        # text_tokens = self.model.clip_tokenizer(text).to(self.model.device)
+        # text_features = self.model.clip_model.encode_text(text_tokens)
+        inputs = self.model.clip_processor(text=text, return_tensors="pt", padding=True).to(self.model.device)
+        text_features = self.model.clip_model.get_text_features(**inputs)
         return torch.nn.functional.normalize(text_features, dim=-1)
 
     def get_config(self) -> Dict[str, Any]:

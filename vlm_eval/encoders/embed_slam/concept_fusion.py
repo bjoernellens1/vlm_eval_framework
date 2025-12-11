@@ -10,8 +10,9 @@ from pathlib import Path
 from PIL import Image
 import time
 
-from .segmentation import SAMSegmenter, FastSAMSegmenter, UltralyticsSAMSegmenter, SLICSegmenter
-import open_clip
+from .segmentation import SAMSegmenter, FastSAMSegmenter, UltralyticsSAMSegmenter, SLICSegmenter, TransformersSAMSegmenter
+# import open_clip
+from transformers import CLIPProcessor, CLIPModel, CLIPTokenizer
 
 
 class ConceptFusion:
@@ -31,9 +32,13 @@ class ConceptFusion:
             tinit = time.time()
 
         if sam == "SAM":
-            self.segmenter = SAMSegmenter({
+            # self.segmenter = SAMSegmenter({
+            #     "model_type": "vit_b",
+            #     "checkpoint": sam_checkpoint,
+            #     "device": device,
+            # })
+            self.segmenter = TransformersSAMSegmenter({
                 "model_type": "vit_b",
-                "checkpoint": sam_checkpoint,
                 "device": device,
             })
         elif sam == "FastSAM":
@@ -49,12 +54,18 @@ class ConceptFusion:
 
         self.segmenter.to(device)
 
-        clip_model_name = "ViT-H-14"
-        self.clip_model, _, self.clip_preprocess = \
-            open_clip.create_model_and_transforms(clip_model_name, "laion2b_s32b_b79k")
-        self.clip_tokenizer = open_clip.get_tokenizer(clip_model_name)
+        # clip_model_name = "ViT-H-14"
+        # self.clip_model, _, self.clip_preprocess = \
+        #     open_clip.create_model_and_transforms(clip_model_name, "laion2b_s32b_b79k")
+        # self.clip_tokenizer = open_clip.get_tokenizer(clip_model_name)
+        
+        model_id = "laion/CLIP-ViT-H-14-laion2B-s32B-b79K"
+        self.clip_model = CLIPModel.from_pretrained(model_id).to(device)
+        self.clip_processor = CLIPProcessor.from_pretrained(model_id)
+        self.clip_tokenizer = CLIPTokenizer.from_pretrained(model_id)
+        
         self.clip_model.eval()
-        self.clip_model.to(device)
+        # self.clip_model.to(device)
 
         if self.timing:
             print(f"initialisation: {time.time() - tinit:.2f} s")
@@ -78,8 +89,10 @@ class ConceptFusion:
             tglobal = time.time()
         global_feat = None
         with torch.autocast(device_type=self.device):
-            _img = self.clip_preprocess(Image.fromarray(image)).unsqueeze(0).to(device=self.device)
-            global_feat = self.clip_model.encode_image(_img)
+            # _img = self.clip_preprocess(Image.fromarray(image)).unsqueeze(0).to(device=self.device)
+            # global_feat = self.clip_model.encode_image(_img)
+            inputs = self.clip_processor(images=image, return_tensors="pt").to(self.device)
+            global_feat = self.clip_model.get_image_features(**inputs)
             global_feat /= global_feat.norm(dim=-1, keepdim=True)
         global_feat = global_feat.half().to(device=self.device)
         global_feat = torch.nn.functional.normalize(global_feat, dim=-1)  # --> (1, 1024)
@@ -99,9 +112,12 @@ class ConceptFusion:
             nonzero_inds = torch.argwhere(torch.from_numpy(segment.mask))
             # Note: Image is (H, W, 3). In SAM output, y coords are along height, x along width
             img_roi = image[_y : _y + _h, _x : _x + _w, :]
-            img_roi = Image.fromarray(img_roi)
-            img_roi = self.clip_preprocess(img_roi).unsqueeze(0).to(device=self.device)
-            roifeat = self.clip_model.encode_image(img_roi)
+            # img_roi = Image.fromarray(img_roi)
+            # img_roi = self.clip_preprocess(img_roi).unsqueeze(0).to(device=self.device)
+            # roifeat = self.clip_model.encode_image(img_roi)
+            inputs_roi = self.clip_processor(images=img_roi, return_tensors="pt").to(self.device)
+            roifeat = self.clip_model.get_image_features(**inputs_roi)
+            
             roifeat = torch.nn.functional.normalize(roifeat, dim=-1)
             feat_per_roi.append(roifeat)
             roi_nonzero_inds.append(nonzero_inds)
@@ -132,8 +148,11 @@ class ConceptFusion:
 
     @torch.no_grad()
     def query(self, map_embeddings: torch.Tensor, query_text: str) -> torch.Tensor:
-        text = self.clip_tokenizer([query_text]).to(device=self.device)
-        textfeat = self.clip_model.encode_text(text)
+        # text = self.clip_tokenizer([query_text]).to(device=self.device)
+        # textfeat = self.clip_model.encode_text(text)
+        inputs_text = self.clip_processor(text=[query_text], return_tensors="pt", padding=True).to(self.device)
+        textfeat = self.clip_model.get_text_features(**inputs_text)
+        
         textfeat = torch.nn.functional.normalize(textfeat, dim=-1)
 
         cosine_similarity = torch.nn.CosineSimilarity(dim=-1)
