@@ -4,7 +4,9 @@ from typing import Any, Callable, Dict, List, Optional, Type
 
 from vlm_eval.core.base_dataset import BaseDataset
 from vlm_eval.core.base_encoder import BaseEncoder
-from vlm_eval.core.base_head import BaseSegmentationHead
+from vlm_eval.core.base_dataset import BaseDataset
+from vlm_eval.core.base_encoder import BaseEncoder
+from vlm_eval.core.base_head import BaseHead, BaseSegmentationHead
 
 
 class EncoderRegistry:
@@ -153,7 +155,7 @@ class HeadRegistry:
         >>> available = HeadRegistry.list_available()
     """
     
-    _registry: Dict[str, Type[BaseSegmentationHead]] = {}
+    _registry: Dict[str, Type[BaseHead]] = {}
     
     @classmethod
     def register(cls, name: str) -> Callable:
@@ -166,18 +168,18 @@ class HeadRegistry:
             Decorator function.
         
         Raises:
-            ValueError: If name is already registered or class doesn't inherit from BaseSegmentationHead.
+            ValueError: If name is already registered or class doesn't inherit from BaseHead.
         
         Example:
             >>> @HeadRegistry.register("linear_probe")
             >>> class LinearProbeHead(BaseSegmentationHead):
             ...     pass
         """
-        def decorator(head_cls: Type[BaseSegmentationHead]) -> Type[BaseSegmentationHead]:
+        def decorator(head_cls: Type[BaseHead]) -> Type[BaseHead]:
             # Type checking
-            if not issubclass(head_cls, BaseSegmentationHead):
+            if not issubclass(head_cls, BaseHead):
                 raise ValueError(
-                    f"Head class {head_cls.__name__} must inherit from BaseSegmentationHead"
+                    f"Head class {head_cls.__name__} must inherit from BaseHead"
                 )
             
             # Check for duplicates
