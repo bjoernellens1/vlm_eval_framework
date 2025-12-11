@@ -1,17 +1,27 @@
+# Core dependencies
 torch>=2.0.0
 torchvision>=0.15.0
 pydantic>=2.0.0
 pyyaml>=6.0
-numpy>=1.24.0
+numpy<2
+scipy>=1.11
 pillow>=10.0.0
 tqdm>=4.65.0
 transformers==4.50.3  # Pinned: 4.51.2+ breaks RADIO model loading
 einops>=0.6.0
 huggingface-hub>=0.16.0
+
+# Vision and ML models
 open-clip-torch>=2.20.0
-segment-anything @ git+https://github.com/facebookresearch/segment-anything.git
+timm
 ultralytics
 opencv-python-headless
-timm
+
+# Git-based dependencies
+gradslam @ git+https://github.com/gradslam/gradslam.git@conceptfusion
+segment-anything @ git+https://github.com/facebookresearch/segment-anything.git
 dinov3 @ git+https://github.com/facebookresearch/dinov3.git
+
+# Additional dependencies
+hf_xet
 rosbags<0.10.0
