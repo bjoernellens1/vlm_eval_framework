@@ -7,7 +7,7 @@ numpy<2
 scipy>=1.11
 pillow>=10.0.0
 tqdm>=4.65.0
-transformers==4.50.3  # Pinned: 4.51.2+ breaks RADIO model loading
+transformers==4.53.0  # Pinned: 4.51.2+ breaks RADIO model loading
 einops>=0.6.0
 huggingface-hub>=0.16.0
 
