@@ -1,0 +1,36 @@
+# Ready-to-Run Example Configuration
+# This configuration uses the SimpleCNN encoder with dummy data
+# and can run immediately without downloading datasets or pretrained weights
+
+name: "simple_cnn_demo"
+
+encoder:
+  name: "simple_cnn"
+  variant: "base"
+  pretrained: false
+
+head:
+  name: "linear_probe"
+  num_classes: 21
+  freeze_encoder: false  # Train the encoder for this demo
+
+dataset:
+  name: "dummy"
+  split: "train"
+  root: ""  # Not needed for dummy dataset
+  kwargs:
+    num_samples: 100
+    image_size: 224
+    num_classes: 21
+
+metrics:
+  compute_miou: true
+  compute_boundary_f1: false
+  compute_panoptic_quality: false
+
+inference:
+  batch_size: 8
+  device: "cuda"  # Change to "cpu" if no GPU available
+  precision: "fp32"
+  num_workers: 2
+  pin_memory: true

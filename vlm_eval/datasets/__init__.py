@@ -1,3 +1,5 @@
 """Dataset implementations."""
 
-__all__ = []
+from vlm_eval.datasets.dummy import DummyDataset
+
+__all__ = ["DummyDataset"]

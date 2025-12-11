@@ -28,6 +28,31 @@ pip install -e ".[dev]"
 
 ## Quick Start
 
+### Ready-to-Run Example
+
+Try the framework immediately with no setup required:
+
+```bash
+# Run the quick start example
+python examples/quick_start.py
+```
+
+This uses a simple CNN encoder and dummy dataset - no external data or pretrained weights needed!
+
+### Interactive Notebooks
+
+Explore the framework interactively:
+
+```bash
+# Launch Jupyter
+cd notebooks
+jupyter notebook
+
+# Try these notebooks:
+# 1. 01_quick_start.ipynb - Framework introduction with visualizations
+# 2. 02_training_example.ipynb - Complete training workflow
+```
+
 ### 1. Register a Custom Encoder
 
 ```python
@@ -132,11 +157,19 @@ vlm_eval/
 │   ├── registry.py          # Plugin registration system
 │   └── config.py            # Pydantic configuration models
 ├── encoders/                # Concrete encoder implementations
+│   └── simple_cnn.py        # ✓ SimpleCNN (ready to use)
 ├── heads/                   # Concrete head implementations
+│   └── linear_probe.py      # ✓ Linear probe (ready to use)
 ├── datasets/                # Concrete dataset implementations
+│   └── dummy.py             # ✓ Dummy dataset (ready to use)
 ├── cli/                     # Command-line interface
 └── utils/                   # Utility functions
 ```
+
+**Included Implementations:**
+- **SimpleCNNEncoder**: Lightweight CNN encoder (tiny/small/base variants)
+- **LinearProbeHead**: 1x1 convolution + bilinear upsampling
+- **DummyDataset**: Random image/mask generator for testing
 
 ### Design Principles
 
