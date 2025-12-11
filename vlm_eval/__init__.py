@@ -11,6 +11,10 @@ from vlm_eval.core import (
     HeadRegistry,
 )
 
+# Import implementations to trigger registration
+# This ensures all encoders, heads, and datasets are registered when the package is imported
+from vlm_eval import encoders, heads, datasets  # noqa: F401
+
 __all__ = [
     "BaseEncoder",
     "BaseSegmentationHead",
