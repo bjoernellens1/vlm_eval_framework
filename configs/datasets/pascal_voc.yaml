@@ -5,7 +5,11 @@ name: "pascal_voc"
 root: "./data/pascal_voc"
 split: "val"  # Options: train, val, trainval
 year: "2012"
-download: true
+
+# Note: Automatic download is disabled (official link is dead)
+# Please download manually from:
+# https://www.kaggle.com/datasets/huanghanchina/pascal-voc-2012
+download: false
 
 # Subset mode for faster testing
 # Set to null to use full dataset

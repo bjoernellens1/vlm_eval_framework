@@ -53,12 +53,42 @@ class PascalVOCDataset(BaseDataset):
         self.image_size = image_size
         
         # Create underlying VOC dataset
-        self.voc_dataset = VOCSegmentation(
-            root=str(self.root),
-            year=year,
-            image_set=split,
-            download=download,
-        )
+        # Note: The official VOC download link is no longer available
+        # Users need to download manually from alternative sources
+        try:
+            self.voc_dataset = VOCSegmentation(
+                root=str(self.root),
+                year=year,
+                image_set=split,
+                download=False,  # Don't use automatic download (link is dead)
+            )
+        except RuntimeError as e:
+            if "not found" in str(e).lower():
+                raise RuntimeError(
+                    f"\n{'='*70}\n"
+                    f"Pascal VOC 2012 dataset not found at {self.root}\n"
+                    f"{'='*70}\n\n"
+                    f"The official download link is no longer available.\n"
+                    f"Please download the dataset manually from one of these sources:\n\n"
+                    f"1. Kaggle (recommended):\n"
+                    f"   https://www.kaggle.com/datasets/huanghanchina/pascal-voc-2012\n"
+                    f"   - Download and extract to: {self.root}\n\n"
+                    f"2. Alternative mirrors:\n"
+                    f"   - Check torchvision documentation for updated links\n"
+                    f"   - Search for 'VOCtrainval_11-May-2012.tar' on academic mirrors\n\n"
+                    f"Expected directory structure:\n"
+                    f"  {self.root}/\n"
+                    f"    └── VOCdevkit/\n"
+                    f"        └── VOC2012/\n"
+                    f"            ├── JPEGImages/\n"
+                    f"            ├── SegmentationClass/\n"
+                    f"            └── ImageSets/\n\n"
+                    f"For quick testing, you can use the DummyDataset instead:\n"
+                    f"  dataset = DatasetRegistry.get('dummy', num_samples=50)\n"
+                    f"{'='*70}\n"
+                )
+            else:
+                raise
         
         # Determine actual dataset size
         self._length = len(self.voc_dataset)
