@@ -51,6 +51,13 @@ jupyter notebook
 # Try these notebooks:
 # 1. 01_quick_start.ipynb - Framework introduction with visualizations
 # 2. 02_training_example.ipynb - Complete training workflow
+# 3. 03_naradio_evaluation.ipynb - NVIDIA RADIO encoder evaluation
+# 4. 04_model_comparison.ipynb - Compare SimpleCNN vs RADIO encoders
+```
+
+**Note**: Notebooks 3-4 require Hugging Face authentication:
+```bash
+huggingface-cli login
 ```
 
 ### 1. Register a Custom Encoder
@@ -157,19 +164,23 @@ vlm_eval/
 │   ├── registry.py          # Plugin registration system
 │   └── config.py            # Pydantic configuration models
 ├── encoders/                # Concrete encoder implementations
-│   └── simple_cnn.py        # ✓ SimpleCNN (ready to use)
+│   ├── simple_cnn.py        # ✓ SimpleCNN (ready to use)
+│   └── radio.py             # ✓ NVIDIA RADIO (ready to use)
 ├── heads/                   # Concrete head implementations
 │   └── linear_probe.py      # ✓ Linear probe (ready to use)
 ├── datasets/                # Concrete dataset implementations
-│   └── dummy.py             # ✓ Dummy dataset (ready to use)
+│   ├── dummy.py             # ✓ Dummy dataset (ready to use)
+│   └── pascal_voc.py        # ✓ Pascal VOC (ready to use)
 ├── cli/                     # Command-line interface
 └── utils/                   # Utility functions
 ```
 
 **Included Implementations:**
 - **SimpleCNNEncoder**: Lightweight CNN encoder (tiny/small/base variants)
+- **RADIOEncoder**: NVIDIA's RADIO foundation model (pretrained)
 - **LinearProbeHead**: 1x1 convolution + bilinear upsampling
 - **DummyDataset**: Random image/mask generator for testing
+- **PascalVOCDataset**: Pascal VOC 2012 segmentation (with subset mode)
 
 ### Design Principles
 
@@ -218,7 +229,9 @@ mypy vlm_eval/
 ## Roadmap
 
 - [x] **Week 1**: Core architecture and registry system
-- [ ] **Week 2-3**: Model implementations (RADIO, DINOv2, CLIP)
+- [x] **Week 2**: RADIO encoder integration and Pascal VOC dataset
+- [x] **Week 2**: Example notebooks for evaluation and comparison
+- [ ] **Week 3**: Additional model implementations (DINOv2, CLIP, SAM)
 - [ ] **Week 3**: Evaluation pipeline and metrics
 - [ ] **Week 3-4**: CLI and API interface
 

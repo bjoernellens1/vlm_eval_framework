@@ -1,13 +1,19 @@
-# Example Encoder Configuration
-# This is a template for configuring a RADIO encoder
+# RADIO Encoder Configuration
+# NVIDIA's RADIO (Reduce All Domains Into One) model
+# Requires Hugging Face authentication: huggingface-cli login
 
 name: "radio"
 variant: "base"
 pretrained: true
 
+# Input size for segmentation tasks
+# RADIO recommends 518x518 for semantic segmentation
+input_size: 518
+
+# Whether to freeze encoder weights during training
+freeze: false
+
 # Additional encoder-specific parameters
 kwargs:
-  # Add any encoder-specific parameters here
-  # For example:
-  # dropout: 0.1
-  # attention_dropout: 0.1
+  # Optional: Hugging Face access token
+  # hf_token: "your_token_here"

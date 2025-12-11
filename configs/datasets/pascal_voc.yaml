@@ -1,0 +1,19 @@
+# Pascal VOC Dataset Configuration
+# For semantic segmentation tasks
+
+name: "pascal_voc"
+root: "./data/pascal_voc"
+split: "val"  # Options: train, val, trainval
+year: "2012"
+download: true
+
+# Subset mode for faster testing
+# Set to null to use full dataset
+subset_size: 50
+
+# Image size for resizing
+image_size: 512
+
+# Additional parameters
+kwargs:
+  # Add any dataset-specific parameters here
