@@ -2,13 +2,24 @@ import sys
 import traceback
 
 print(f"Python: {sys.executable}")
-print(f"Path: {sys.path}")
 
 try:
-    import rosbags
-    print(f"rosbags: {rosbags.__file__}")
-    from rosbags.rosbag1 import Reader
-    print("rosbags.rosbag1.Reader imported successfully")
+    print("Importing rosbags.rosbag1...")
+    from rosbags.rosbag1 import Reader as Reader1
+    print("OK")
+    
+    print("Importing rosbags.rosbag2...")
+    from rosbags.rosbag2 import Reader as Reader2
+    print("OK")
+    
+    print("Importing rosbags.serde...")
+    from rosbags.serde import deserialize_cdr, ros1_to_cdr
+    print("OK")
+    
+    print("Importing rosbags.typesys...")
+    from rosbags.typesys import get_types_from_msg, register_types
+    print("OK")
+    
 except ImportError:
     print("ImportError caught:")
     traceback.print_exc()
