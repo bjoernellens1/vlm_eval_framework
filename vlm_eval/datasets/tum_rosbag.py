@@ -9,7 +9,6 @@ from pathlib import Path
 # Try importing rosbags (preferred for flexibility) or rosbag (legacy)
 try:
     from rosbags.highlevel import AnyReader
-    from rosbags.typesys import get_types_from_msg, register_types
     ROSBAGS_AVAILABLE = True
     ROSBAGS_IMPORT_ERROR = None
 except ImportError as e:
