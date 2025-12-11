@@ -103,6 +103,9 @@ class EncoderRegistry:
         """
         config = config.copy()
         name = config.pop("name")
+        # Extract and merge kwargs if present
+        kwargs = config.pop("kwargs", {})
+        config.update(kwargs)
         return cls.get(name, **config)
     
     @classmethod
@@ -237,6 +240,9 @@ class HeadRegistry:
         """
         config = config.copy()
         name = config.pop("name")
+        # Extract and merge kwargs if present
+        kwargs = config.pop("kwargs", {})
+        config.update(kwargs)
         return cls.get(name, encoder=encoder, **config)
     
     @classmethod
@@ -365,6 +371,9 @@ class DatasetRegistry:
         """
         config = config.copy()
         name = config.pop("name")
+        # Extract and merge kwargs if present
+        kwargs = config.pop("kwargs", {})
+        config.update(kwargs)
         return cls.get(name, **config)
     
     @classmethod
