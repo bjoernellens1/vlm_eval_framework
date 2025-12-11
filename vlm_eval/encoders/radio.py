@@ -61,13 +61,22 @@ class RADIOEncoder(BaseEncoder):
                 # RADIO uses patch_size=16 for the base model
                 self._patch_size = getattr(self.model.config, 'patch_size', 16)
                 
-                # Get spatial feature dimension
-                # This is the dimension D in the spatial_features output (B, T, D)
-                self._output_channels = getattr(
-                    self.model.config, 
-                    'hidden_size', 
-                    1024  # Default for RADIO base
-                )
+                # Determine output channels dynamically
+                # Run a dummy forward pass to get the actual feature dimension
+                # This is more robust than relying on config which might be wrong
+                self.model.eval()
+                with torch.no_grad():
+                    # Create a small dummy input
+                    dummy_input = torch.zeros(1, 3, self.input_size, self.input_size)
+                    # Handle device if model was somehow moved (though unlikely here)
+                    if next(self.model.parameters()).is_cuda:
+                        dummy_input = dummy_input.cuda()
+                    
+                    # Run forward pass
+                    _, spatial_features = self.model(dummy_input)
+                    
+                    # spatial_features is (B, T, D), we want D
+                    self._output_channels = spatial_features.shape[2]
                 
             except ImportError:
                 raise ImportError(
