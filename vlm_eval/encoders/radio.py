@@ -18,7 +18,7 @@ class RADIOEncoder(BaseEncoder):
     Args:
         variant: Model variant (currently only 'base' supported, uses nvidia/RADIO)
         pretrained: Whether to load pretrained weights (default: True)
-        input_size: Input image size (default: 518 for segmentation tasks)
+        input_size: Input image size (default: 512, must be divisible by patch_size)
         freeze: Whether to freeze encoder weights (default: False)
         hf_token: Optional Hugging Face access token
     
@@ -31,7 +31,7 @@ class RADIOEncoder(BaseEncoder):
         self,
         variant: str = "base",
         pretrained: bool = True,
-        input_size: int = 518,
+        input_size: int = 512,
         freeze: bool = False,
         hf_token: Optional[str] = None,
     ):
@@ -58,8 +58,8 @@ class RADIOEncoder(BaseEncoder):
                 )
                 
                 # Get patch size from model config
-                # RADIO uses patch_size=14 for the base model
-                self._patch_size = getattr(self.model.config, 'patch_size', 14)
+                # RADIO uses patch_size=16 for the base model
+                self._patch_size = getattr(self.model.config, 'patch_size', 16)
                 
                 # Get spatial feature dimension
                 # This is the dimension D in the spatial_features output (B, T, D)
@@ -109,6 +109,24 @@ class RADIOEncoder(BaseEncoder):
                 - H' = H // patch_size
                 - W' = W // patch_size
         """
+        # Ensure input dimensions are divisible by patch_size
+        H_in, W_in = images.shape[-2:]
+        
+        # Check if resizing is needed
+        if H_in % self._patch_size != 0 or W_in % self._patch_size != 0:
+            # Round to nearest multiple of patch_size
+            H_new = ((H_in + self._patch_size - 1) // self._patch_size) * self._patch_size
+            W_new = ((W_in + self._patch_size - 1) // self._patch_size) * self._patch_size
+            
+            # Resize using bilinear interpolation
+            images = torch.nn.functional.interpolate(
+                images,
+                size=(H_new, W_new),
+                mode='bilinear',
+                align_corners=False
+            )
+            H_in, W_in = H_new, W_new
+        
         # RADIO returns a tuple: (summary, spatial_features)
         # summary: (B, C) - global image representation
         # spatial_features: (B, T, D) - spatial tokens for dense tasks
@@ -117,7 +135,6 @@ class RADIOEncoder(BaseEncoder):
         # Reshape spatial features from (B, T, D) to (B, D, H, W)
         # T = (H // patch_size) * (W // patch_size)
         B, T, D = spatial_features.shape
-        H_in, W_in = images.shape[-2:]
         H_out = H_in // self._patch_size
         W_out = W_in // self._patch_size
         
