@@ -10,7 +10,11 @@ from pathlib import Path
 try:
     from rosbags.rosbag1 import Reader as Reader1
     from rosbags.rosbag2 import Reader as Reader2
-    from rosbags.serde import deserialize_cdr, ros1_to_cdr
+    try:
+        from rosbags.serde import deserialize_cdr, ros1_to_cdr
+    except ImportError:
+        from rosbags.serde.cdr import deserialize_cdr
+        from rosbags.serde.ros1 import ros1_to_cdr
     from rosbags.typesys import get_types_from_msg, register_types
     ROSBAGS_AVAILABLE = True
 except ImportError:
