@@ -47,8 +47,12 @@ class RADIOEncoder(BaseEncoder):
                 
                 # Load the model
                 model_name = "nvidia/RADIO"
+                # Pin to specific revision to avoid downloading new versions
+                # This revision is known to work with transformers 4.50.3
+                revision = "10f0448935988a74dd59b4969ac520dbcd7db293"
                 self.model = AutoModel.from_pretrained(
                     model_name,
+                    revision=revision,
                     trust_remote_code=True,
                     token=hf_token,
                 )
