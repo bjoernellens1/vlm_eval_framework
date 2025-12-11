@@ -28,17 +28,25 @@ pip install -e ".[dev]"
 
 ### ROS Environment Setup (Optional)
 
+### ROS Environment Setup (Optional)
+
 To use the TUM dataset loader with rosbags, you need to install ROS dependencies.
-You can add them to your current Conda environment using the provided environment file:
+
+**Option 1: Create a new environment (Recommended)**
+This ensures compatibility with ROS packages (which often require Python 3.10/3.11).
 
 ```bash
-conda env update --prefix $CONDA_PREFIX --file environment_ros.yaml
+conda env create -f environment_ros_create.yaml
+conda activate vlm_ros_env
 ```
 
-Or create a new environment:
+**Option 2: Use in current environment (e.g. Base)**
+If you are using Python 3.12 (default in many base images), full ROS installation via Robostack might fail.
+However, you can install the `rosbags` library to read bag files without full ROS:
 
 ```bash
-conda env create -f environment_ros.yaml
+pip install rosbags
+# Optional: cv_bridge if available, otherwise the code falls back to manual decoding
 ```
 
 ## Quick Start

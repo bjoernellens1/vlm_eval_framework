@@ -23,10 +23,10 @@ try:
 except ImportError:
     CV_BRIDGE_AVAILABLE = False
 
-from vlm_eval.core import DatasetRegistry
+from vlm_eval.core import DatasetRegistry, BaseDataset
 
 @DatasetRegistry.register("tum_rosbag")
-class TUMRosbagDataset(Dataset):
+class TUMRosbagDataset(BaseDataset):
     """Dataset for loading images from ROS bags (e.g. TUM dataset).
     
     Supports both ROS1 (.bag) and ROS2 (.mcap, .db3) files via 'rosbags' library.
@@ -42,6 +42,7 @@ class TUMRosbagDataset(Dataset):
         topics: List[str] = ["/camera/rgb/image_color", "/camera/depth/image"],
         image_size: Optional[int] = None
     ):
+        super().__init__()
         if not ROSBAGS_AVAILABLE:
             raise ImportError(
                 "rosbags library not found. "
@@ -78,6 +79,18 @@ class TUMRosbagDataset(Dataset):
             
         print(f"Indexed {len(self.messages)} messages.")
         
+    @property
+    def num_classes(self) -> int:
+        return 0
+
+    @property
+    def class_names(self) -> List[str]:
+        return []
+
+    @property
+    def ignore_index(self) -> int:
+        return 255
+
     def __len__(self) -> int:
         return len(self.messages)
         
@@ -155,11 +168,17 @@ class TUMRosbagDataset(Dataset):
                     elif dtype == np.uint8:
                         img_tensor = img_tensor / 255.0
                 
+                # Create dummy mask
+                mask = torch.zeros((img_tensor.shape[-2], img_tensor.shape[-1]), dtype=torch.long)
+                
                 return {
                     "image": img_tensor,
+                    "mask": mask,
                     "timestamp": timestamp / 1e9, # ns to sec
                     "topic": topic,
-                    "index": idx
+                    "index": idx,
+                    "filename": f"{topic.replace('/', '_')}_{timestamp}.png",
+                    "image_id": idx
                 }
             else:
                 return {"data": msg, "timestamp": timestamp / 1e9, "topic": topic}
