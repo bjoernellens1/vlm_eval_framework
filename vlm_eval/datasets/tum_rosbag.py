@@ -11,8 +11,10 @@ try:
     from rosbags.highlevel import AnyReader
     from rosbags.typesys import get_types_from_msg, register_types
     ROSBAGS_AVAILABLE = True
-except ImportError:
+    ROSBAGS_IMPORT_ERROR = None
+except ImportError as e:
     ROSBAGS_AVAILABLE = False
+    ROSBAGS_IMPORT_ERROR = e
 
 # Try importing cv_bridge
 try:
@@ -42,10 +44,7 @@ class TUMRosbagDataset(BaseDataset):
     ):
         super().__init__()
         if not ROSBAGS_AVAILABLE:
-            raise ImportError(
-                "rosbags library not found. "
-                "Please install it with: pip install rosbags"
-            )
+            raise ROSBAGS_IMPORT_ERROR
             
         self.bag_path = Path(bag_path)
         if not self.bag_path.exists():
