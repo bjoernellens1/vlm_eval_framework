@@ -11,11 +11,17 @@ def download_file(url, filename):
         print(f"Failed to download {filename}: {e}")
 
 # SAM Checkpoint
+cache_dir = os.path.expanduser("~/.cache/torch/hub/checkpoints")
+os.makedirs(cache_dir, exist_ok=True)
+
 sam_url = "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth"
-if not os.path.exists("sam_vit_b_01ec64.pth"):
-    download_file(sam_url, "sam_vit_b_01ec64.pth")
+sam_filename = "sam_vit_b_01ec64.pth"
+sam_path = os.path.join(cache_dir, sam_filename)
+
+if not os.path.exists(sam_path):
+    download_file(sam_url, sam_path)
 else:
-    print("sam_vit_b_01ec64.pth already exists.")
+    print(f"{sam_filename} already exists at {sam_path}.")
 
 # DINOv3 Checkpoint
 # Expected path: ~/.cache/torch/hub/checkpoints/dinov3_vitl16_pretrain_lvd1609m-0aa4cbdd.pth

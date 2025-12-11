@@ -39,6 +39,12 @@ class ConceptFusionEncoder(BaseEncoder):
         # ConceptFusion expects a Path object for checkpoint
         checkpoint_path = Path(sam_checkpoint) if sam_checkpoint else None
         
+        # Check if checkpoint exists, if not check cache
+        if checkpoint_path and not checkpoint_path.exists():
+            cache_path = Path(os.path.expanduser("~/.cache/torch/hub/checkpoints")) / sam_checkpoint
+            if cache_path.exists():
+                checkpoint_path = cache_path
+        
         self.model = ConceptFusion(
             sam_checkpoint=checkpoint_path,
             sam=sam_variant,
@@ -153,6 +159,12 @@ class XFusionEncoder(BaseEncoder):
         self._device_str = device
         
         checkpoint_path = Path(sam_checkpoint) if sam_checkpoint else None
+        
+        # Check if checkpoint exists, if not check cache
+        if checkpoint_path and not checkpoint_path.exists():
+            cache_path = Path(os.path.expanduser("~/.cache/torch/hub/checkpoints")) / sam_checkpoint
+            if cache_path.exists():
+                checkpoint_path = cache_path
         
         self.model = XFusion(
             sam_checkpoint=checkpoint_path,
