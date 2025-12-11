@@ -8,13 +8,7 @@ from pathlib import Path
 
 # Try importing rosbags (preferred for flexibility) or rosbag (legacy)
 try:
-    from rosbags.rosbag1 import Reader as Reader1
-    from rosbags.rosbag2 import Reader as Reader2
-    try:
-        from rosbags.serde import deserialize_cdr, ros1_to_cdr
-    except ImportError:
-        from rosbags.serde.cdr import deserialize_cdr
-        from rosbags.serde.ros1 import ros1_to_cdr
+    from rosbags.highlevel import AnyReader
     from rosbags.typesys import get_types_from_msg, register_types
     ROSBAGS_AVAILABLE = True
 except ImportError:
@@ -66,13 +60,8 @@ class TUMRosbagDataset(BaseDataset):
         print(f"Indexing bag file: {bag_path}...")
         
         # Determine if ROS1 or ROS2
-        is_ros2 = self.bag_path.suffix in ['.mcap', '.db3'] or self.bag_path.is_dir()
-        
-        if is_ros2:
-            self.reader = Reader2(self.bag_path)
-        else:
-            self.reader = Reader1(self.bag_path)
-            
+        # AnyReader handles both automatically
+        self.reader = AnyReader([self.bag_path])
         self.reader.open()
         
         # Filter connections by topic
@@ -104,10 +93,7 @@ class TUMRosbagDataset(BaseDataset):
         
         try:
             # Deserialize
-            if isinstance(self.reader, Reader1):
-                msg = deserialize_cdr(ros1_to_cdr(rawdata, conn.msgtype), conn.msgtype)
-            else:
-                msg = deserialize_cdr(rawdata, conn.msgtype)
+            msg = self.reader.deserialize(rawdata, conn.msgtype)
             
             # Check if it's an image
             if hasattr(msg, "encoding") and hasattr(msg, "data"):
