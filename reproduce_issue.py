@@ -3,7 +3,7 @@ from vlm_eval.encoders import *
 from vlm_eval.datasets.tum_rosbag import TUMRosbagDataset
 
 print("Successfully imported TUMRosbagDataset")
-print("Available encoders:", EncoderRegistry.list_encoders())
+print("Available encoders:", EncoderRegistry.list_available())
 
 try:
     # Try to instantiate to check if abstract methods are implemented
