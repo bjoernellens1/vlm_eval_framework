@@ -268,6 +268,9 @@ for name, model in models.items():
 
             feats = F.normalize(feats, dim=1)
             txt = F.normalize(txt, dim=1)
+            
+            # Ensure same dtype
+            txt = txt.to(dtype=feats.dtype)
 
             sim = torch.einsum("bchw,bc->bhw", feats, txt)[0].cpu().numpy()
 

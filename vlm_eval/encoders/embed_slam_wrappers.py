@@ -78,10 +78,8 @@ class ConceptFusionEncoder(BaseEncoder):
         return torch.stack(outputs)
 
     def encode_text(self, text: List[str]) -> torch.Tensor:
-        # text_tokens = self.model.clip_tokenizer(text).to(self.model.device)
-        # text_features = self.model.clip_model.encode_text(text_tokens)
-        inputs = self.model.clip_processor(text=text, return_tensors="pt", padding=True).to(self.model.device)
-        text_features = self.model.clip_model.get_text_features(**inputs)
+        text_tokens = self.model.clip_tokenizer(text).to(self.model.device)
+        text_features = self.model.clip_model.encode_text(text_tokens)
         return torch.nn.functional.normalize(text_features, dim=-1)
 
     def get_config(self) -> Dict[str, Any]:
@@ -200,10 +198,8 @@ class XFusionEncoder(BaseEncoder):
         return torch.stack(outputs)
 
     def encode_text(self, text: List[str]) -> torch.Tensor:
-        # text_tokens = self.model.clip_tokenizer(text).to(self.model.device)
-        # text_features = self.model.clip_model.encode_text(text_tokens)
-        inputs = self.model.clip_processor(text=text, return_tensors="pt", padding=True).to(self.model.device)
-        text_features = self.model.clip_model.get_text_features(**inputs)
+        text_tokens = self.model.clip_tokenizer(text).to(self.model.device)
+        text_features = self.model.clip_model.encode_text(text_tokens)
         return torch.nn.functional.normalize(text_features, dim=-1)
 
     def get_config(self) -> Dict[str, Any]:
