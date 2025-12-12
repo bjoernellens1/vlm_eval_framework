@@ -10,8 +10,8 @@ import copy
 import os
 
 from .segmentation import SAMSegmenter, FastSAMSegmenter, UltralyticsSAMSegmenter, SLICSegmenter, TransformersSAMSegmenter
-# import open_clip
-from transformers import CLIPProcessor, CLIPModel, CLIPTokenizer
+import open_clip
+# from transformers import CLIPProcessor, CLIPModel, CLIPTokenizer
 import cv2
 import random
 
@@ -66,18 +66,18 @@ class XFusion:
 
         self.segmenter.to(device)
 
-        # clip_model_name = "ViT-B-16"
-        # self.clip_model, _, self.clip_preprocess = \
-        #     open_clip.create_model_and_transforms(clip_model_name, "laion2b_s34b_b88k", precision="fp16")
-        # self.clip_tokenizer = open_clip.get_tokenizer(clip_model_name)
+        clip_model_name = "ViT-B-16"
+        self.clip_model, _, self.clip_preprocess = \
+            open_clip.create_model_and_transforms(clip_model_name, "laion2b_s34b_b88k", precision="fp16")
+        self.clip_tokenizer = open_clip.get_tokenizer(clip_model_name)
         
-        model_id = "laion/CLIP-ViT-B-16-laion2B-s34B-b88K"
-        self.clip_model = CLIPModel.from_pretrained(model_id).to(device)
-        self.clip_processor = CLIPProcessor.from_pretrained(model_id)
-        self.clip_tokenizer = CLIPTokenizer.from_pretrained(model_id)
+        # model_id = "laion/CLIP-ViT-B-16-laion2B-s34B-b88K"
+        # self.clip_model = CLIPModel.from_pretrained(model_id).to(device)
+        # self.clip_processor = CLIPProcessor.from_pretrained(model_id)
+        # self.clip_tokenizer = CLIPTokenizer.from_pretrained(model_id)
         
         self.clip_model.eval()
-        # self.clip_model.to(device)
+        self.clip_model.to(device)
 
         if self.timing:
             print(f"initialisation: {time.time() - tinit:.2f} s")
@@ -167,16 +167,18 @@ class XFusion:
             img_roi[np.logical_not(mask_roi), :] = [255, 0, 255]
 
             img_roi = Image.fromarray(img_roi)
-            # img_rois[isegm] = self.clip_preprocess(img_roi).unsqueeze(0).to(device=self.device)
-            img_rois_list.append(img_roi)
+            img_rois_list.append(self.clip_preprocess(img_roi).unsqueeze(0).to(device=self.device))
+            # img_rois_list.append(img_roi)
 
         # feat_per_roi = self.clip_model.encode_image(img_rois, normalize=True).detach()
         if len(img_rois_list) > 0:
-            inputs_rois = self.clip_processor(images=img_rois_list, return_tensors="pt", padding=True).to(self.device)
-            feat_per_roi = self.clip_model.get_image_features(**inputs_rois).detach()
+            # inputs_rois = self.clip_processor(images=img_rois_list, return_tensors="pt", padding=True).to(self.device)
+            # feat_per_roi = self.clip_model.get_image_features(**inputs_rois).detach()
+            img_rois = torch.cat(img_rois_list, dim=0)
+            feat_per_roi = self.clip_model.encode_image(img_rois).detach()
             feat_per_roi = torch.nn.functional.normalize(feat_per_roi, dim=-1)
         else:
-            feat_per_roi = torch.empty(0, self.clip_model.config.projection_dim, device=self.device)
+            feat_per_roi = torch.empty(0, self.clip_model.visual.output_dim, device=self.device)
 
         if self.timing:
             print(f"local: {time.time() - tlocal:.2f} s")
@@ -196,10 +198,10 @@ class XFusion:
 
     @torch.no_grad()
     def query(self, map_embeddings: torch.Tensor, query_text: str) -> torch.Tensor:
-        # text = self.clip_tokenizer([query_text]).to(device=self.device)
-        # textfeat = self.clip_model.encode_text(text)
-        inputs_text = self.clip_processor(text=[query_text], return_tensors="pt", padding=True).to(self.device)
-        textfeat = self.clip_model.get_text_features(**inputs_text)
+        text = self.clip_tokenizer([query_text]).to(device=self.device)
+        textfeat = self.clip_model.encode_text(text)
+        # inputs_text = self.clip_processor(text=[query_text], return_tensors="pt", padding=True).to(self.device)
+        # textfeat = self.clip_model.get_text_features(**inputs_text)
         textfeat = torch.nn.functional.normalize(textfeat, dim=-1)
 
         cosine_similarity = torch.nn.CosineSimilarity(dim=-1)

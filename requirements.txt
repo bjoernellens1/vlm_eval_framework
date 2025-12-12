@@ -25,3 +25,4 @@ dinov3 @ git+https://github.com/facebookresearch/dinov3.git
 # Additional dependencies
 hf_xet
 rosbags<0.10.0
+tf-keras
