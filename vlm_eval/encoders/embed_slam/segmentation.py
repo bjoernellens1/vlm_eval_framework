@@ -67,16 +67,53 @@ class TransformersSAMSegmenter(Segmenter):
             image_pil = image
             
         outputs = self.generator(image_pil)
-        # outputs is list of dicts: {'mask': array, 'box': [x_min, y_min, x_max, y_max], 'score': float}
         
         segments = []
-        for out in outputs:
-            mask = out['mask']
-            box_xyxy = out['box']
-            x, y, x2, y2 = box_xyxy
-            w = x2 - x
-            h = y2 - y
-            segments.append(Segment(mask, [x, y, w, h]))
+        
+        # Handle different output formats
+        # Case 1: Dict with 'masks' (and optional 'scores') - observed in recent transformers
+        if isinstance(outputs, dict) and "masks" in outputs:
+            masks = outputs["masks"]
+            scores = outputs.get("scores", [1.0] * len(masks))
+            
+            for mask, score in zip(masks, scores):
+                # mask might be a tensor or numpy array
+                if isinstance(mask, torch.Tensor):
+                    mask = mask.cpu().numpy()
+                
+                # Ensure mask is boolean or binary
+                mask_bool = mask > 0
+                
+                # Calculate bbox
+                y_indices, x_indices = np.where(mask_bool)
+                if len(y_indices) > 0:
+                    x_min, x_max = np.min(x_indices), np.max(x_indices)
+                    y_min, y_max = np.min(y_indices), np.max(y_indices)
+                    w = x_max - x_min
+                    h = y_max - y_min
+                    segments.append(Segment(mask_bool, [x_min, y_min, w, h]))
+                    
+        # Case 2: List of dicts (legacy or different pipeline version)
+        elif isinstance(outputs, list):
+            for out in outputs:
+                if 'mask' in out and 'box' in out:
+                    mask = out['mask']
+                    box_xyxy = out['box']
+                    x, y, x2, y2 = box_xyxy
+                    w = x2 - x
+                    h = y2 - y
+                    segments.append(Segment(mask, [x, y, w, h]))
+                elif 'mask' in out:
+                     # Fallback if box is missing
+                    mask = out['mask']
+                    y_indices, x_indices = np.where(mask)
+                    if len(y_indices) > 0:
+                        x_min, x_max = np.min(x_indices), np.max(x_indices)
+                        y_min, y_max = np.min(y_indices), np.max(y_indices)
+                        w = x_max - x_min
+                        h = y_max - y_min
+                        segments.append(Segment(mask, [x_min, y_min, w, h]))
+        
         return segments
 
     def refine(self, image: npt.ArrayLike, point_coords: npt.ArrayLike) -> list[Segment]:
