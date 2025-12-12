@@ -70,6 +70,7 @@ for i, (name, model) in enumerate(models.items()):
         # Compute similarity
         # features: (1, C, H, W)
         # text_emb: (1, C)
+        text_emb = text_emb.to(dtype=features.dtype)
         sim = torch.einsum("bchw,bc->bhw", features, text_emb)
         
         sim_map = sim[0].cpu().numpy()
