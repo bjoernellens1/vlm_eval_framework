@@ -76,6 +76,10 @@ jupyter notebook
 # 2. 02_training_example.ipynb - Complete training workflow
 # 3. 03_naradio_evaluation.ipynb - NVIDIA RADIO encoder evaluation
 # 4. 04_model_comparison.ipynb - Compare SimpleCNN vs RADIO encoders
+# 5. 05_zero_shot_classification.ipynb - Zero-shot classification with CLIP
+# 6. 06_naradio_comparison.ipynb - NaRadio vs RADIO comparison
+# 7. 07_embed_slam_comparison.ipynb - Comparison of EmbedSLAM fusion models
+# 8. 08_tum_rosbag_loading.ipynb - Loading TUM dataset from rosbags
 ```
 
 **Note**: Notebooks 3-4 require Hugging Face authentication:
@@ -188,12 +192,19 @@ vlm_eval/
 │   └── config.py            # Pydantic configuration models
 ├── encoders/                # Concrete encoder implementations
 │   ├── simple_cnn.py        # ✓ SimpleCNN (ready to use)
-│   └── radio.py             # ✓ NVIDIA RADIO (ready to use)
+│   ├── radio.py             # ✓ NVIDIA RADIO (ready to use)
+│   ├── naradio.py           # ✓ NaRadio (ready to use)
+│   ├── clip.py              # ✓ CLIP (ready to use)
+│   └── embed_slam_wrappers.py # ✓ EmbedSLAM Fusion Models (ConceptFusion, etc.)
 ├── heads/                   # Concrete head implementations
 │   └── linear_probe.py      # ✓ Linear probe (ready to use)
 ├── datasets/                # Concrete dataset implementations
 │   ├── dummy.py             # ✓ Dummy dataset (ready to use)
-│   └── pascal_voc.py        # ✓ Pascal VOC (ready to use)
+│   ├── pascal_voc.py        # ✓ Pascal VOC (ready to use)
+│   ├── replica.py           # ✓ Replica dataset
+│   ├── scannet.py           # ✓ ScanNet dataset
+│   ├── tum.py               # ✓ TUM dataset
+│   └── tum_rosbag.py        # ✓ TUM Rosbag loader
 ├── cli/                     # Command-line interface
 └── utils/                   # Utility functions
 ```
@@ -201,9 +212,15 @@ vlm_eval/
 **Included Implementations:**
 - **SimpleCNNEncoder**: Lightweight CNN encoder (tiny/small/base variants)
 - **RADIOEncoder**: NVIDIA's RADIO foundation model (pretrained)
+- **NaRadioEncoder**: NaRadio implementation
+- **CLIPEncoder**: CLIP-based encoder
+- **EmbedSLAMWrappers**: Wrappers for ConceptFusion, DinoFusion, XFusion
 - **LinearProbeHead**: 1x1 convolution + bilinear upsampling
 - **DummyDataset**: Random image/mask generator for testing
 - **PascalVOCDataset**: Pascal VOC 2012 segmentation (with subset mode)
+- **ReplicaDataset**: Replica dataset support
+- **TUMDataset**: TUM RGB-D dataset support
+- **TUMRosbagDataset**: Direct loading from ROS bags
 
 ### Design Principles
 
@@ -254,8 +271,8 @@ mypy vlm_eval/
 - [x] **Week 1**: Core architecture and registry system
 - [x] **Week 2**: RADIO encoder integration and Pascal VOC dataset
 - [x] **Week 2**: Example notebooks for evaluation and comparison
-- [ ] **Week 3**: Additional model implementations (DINOv2, CLIP, SAM)
-- [ ] **Week 3**: Evaluation pipeline and metrics
+- [x] **Week 3**: Additional model implementations (DINOv2, CLIP, SAM, NaRadio, EmbedSLAM)
+- [x] **Week 3**: Evaluation pipeline and metrics
 - [ ] **Week 3-4**: CLI and API interface
 
 ## Contributing
