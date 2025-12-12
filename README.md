@@ -175,7 +175,6 @@ with open("configs/experiments/my_experiment.yaml") as f:
 encoder = EncoderRegistry.get(config.encoder.name, **config.encoder.dict())
 head = HeadRegistry.get(config.head.name, encoder=encoder, **config.head.dict())
 
-# Run evaluation (to be implemented in Week 3)
 ```
 
 ## Architecture
@@ -268,12 +267,12 @@ mypy vlm_eval/
 
 ## Roadmap
 
-- [x] **Week 1**: Core architecture and registry system
-- [x] **Week 2**: RADIO encoder integration and Pascal VOC dataset
-- [x] **Week 2**: Example notebooks for evaluation and comparison
-- [x] **Week 3**: Additional model implementations (DINOv2, CLIP, SAM, NaRadio, EmbedSLAM)
-- [x] **Week 3**: Evaluation pipeline and metrics
-- [ ] **Week 3-4**: CLI and API interface
+- [x] Core architecture and registry system
+- [x] RADIO encoder integration and Pascal VOC dataset
+- [x] Example notebooks for evaluation and comparison
+- [ ] Additional model implementations (DINOv2, CLIP, SAM, NaRadio, EmbedSLAM)
+- [ ] Evaluation pipeline and metrics
+- [ ] CLI and API interface
 
 ## Contributing
 
