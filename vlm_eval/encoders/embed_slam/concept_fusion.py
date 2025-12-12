@@ -118,7 +118,7 @@ class ConceptFusion:
             # inputs_roi = self.clip_processor(images=img_roi, return_tensors="pt").to(self.device)
             # roifeat = self.clip_model.get_image_features(**inputs_roi)
             
-            roifeat = torch.nn.functional.normalize(roifeat, dim=-1)
+            roifeat = torch.nn.functional.normalize(roifeat, dim=-1).half()
             feat_per_roi.append(roifeat)
             roi_nonzero_inds.append(nonzero_inds)
             _sim = cosine_similarity(global_feat, roifeat)
